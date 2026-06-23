@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Fuel Route Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    html, body { height: 100%; margin: 0; font-family: system-ui, sans-serif; }
+    #map { height: 100%; }
+    #summary {
+      position: absolute; top: 10px; right: 10px; z-index: 1000;
+      background: rgba(255, 255, 255, 0.95); padding: 12px 16px;
+      border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.25);
+      max-width: 320px; font-size: 14px;
+    }
+    #summary h3 { margin: 0 0 6px; font-size: 15px; }
+    #summary .cost { font-size: 20px; font-weight: 700; color: #0a6b3d; }
+    #summary ol { margin: 6px 0 0; padding-left: 18px; max-height: 40vh; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="summary"><h3>Loading route…</h3></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script id="route-params" type="application/json">
+    {"start": "{{ start|escapejs }}", "finish": "{{ finish|escapejs }}"}
+  </script>
+  <script>
+    const cfg = JSON.parse(document.getElementById('route-params').textContent);
+    const map = L.map('map').setView([39.5, -98.35], 4);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    fetch(`/api/route/?start=${encodeURIComponent(cfg.start)}&finish=${encodeURIComponent(cfg.finish)}`)
+      .then(r => r.json())
+      .then(data => {
+        const summary = document.getElementById('summary');
+        if (data.error) {
+          summary.innerHTML = `<h3>Error</h3><p>${data.error}</p>`;
+          return;
+        }
+        const line = L.polyline(data.route.geometry, { color: '#1565c0', weight: 4 }).addTo(map);
+        map.fitBounds(line.getBounds(), { padding: [30, 30] });
+
+        L.marker(data.start.location).addTo(map).bindPopup(`<b>Start:</b> ${data.start.resolved}`);
+        L.marker(data.finish.location).addTo(map).bindPopup(`<b>Finish:</b> ${data.finish.resolved}`);
+
+        const fuelIcon = L.divIcon({
+          html: '⛽', className: '', iconSize: [28, 28], iconAnchor: [14, 14]
+        });
+        data.fuel_stops.forEach((s, i) => {
+          L.marker([s.location.lat, s.location.lng], { icon: fuelIcon }).addTo(map)
+            .bindPopup(`<b>Stop ${i + 1}: ${s.name}</b><br>${s.city}, ${s.state}<br>` +
+                       `$${s.price_per_gallon}/gal · ${s.gallons_purchased} gal · $${s.fuel_cost}<br>` +
+                       `Mile ${s.miles_from_start}`);
+        });
+
+        summary.innerHTML =
+          `<h3>${data.route.total_distance_miles} mi · ${data.fuel_stops.length} fuel stop(s)</h3>` +
+          `<div class="cost">Total fuel: $${data.total_fuel_cost}</div>` +
+          `<ol>` + data.fuel_stops.map(s =>
+            `<li>${s.name} — ${s.city}, ${s.state}<br>$${s.price_per_gallon}/gal · $${s.fuel_cost}</li>`
+          ).join('') + `</ol>`;
+      })
+      .catch(err => {
+        document.getElementById('summary').innerHTML = `<h3>Error</h3><p>${err}</p>`;
+      });
+  </script>
+</body>
+</html>
