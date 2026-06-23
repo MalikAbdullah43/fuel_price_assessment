@@ -84,6 +84,11 @@ def stations_near_route(route_points, cumulative_miles, radius_miles):
                         if best_dist is None or d < best_dist:
                             best_dist, best_mile = d, mile
             if best_dist is not None and best_dist <= radius_miles:
+                # Ignore stations with missing or non-positive prices which
+                # would otherwise produce zero-cost results.
+                price = s.get('retail_price')
+                if price is None or price <= 0:
+                    continue
                 results.append({**s, 'route_mile': best_mile, 'detour_miles': round(best_dist, 1)})
 
     results.sort(key=lambda s: s['route_mile'])
