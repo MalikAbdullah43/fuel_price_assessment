@@ -1,0 +1,73 @@
+{
+  "info": {
+    "name": "Fuel Route Planner",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Cross-country: NYC to LA",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8000/api/route/?start=New York, NY&finish=Los Angeles, CA",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["api", "route", ""],
+          "query": [
+            {"key": "start", "value": "New York, NY"},
+            {"key": "finish", "value": "Los Angeles, CA"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "Short trip (no stops needed): Boston to DC",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8000/api/route/?start=Boston, MA&finish=Washington, DC",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["api", "route", ""],
+          "query": [
+            {"key": "start", "value": "Boston, MA"},
+            {"key": "finish", "value": "Washington, DC"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "Medium trip: Seattle to Denver",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8000/api/route/?start=Seattle, WA&finish=Denver, CO",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["api", "route", ""],
+          "query": [
+            {"key": "start", "value": "Seattle, WA"},
+            {"key": "finish", "value": "Denver, CO"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "Validation error (missing finish)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8000/api/route/?start=Dallas, TX",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["api", "route", ""],
+          "query": [{"key": "start", "value": "Dallas, TX"}]
+        }
+      }
+    }
+  ]
+}
